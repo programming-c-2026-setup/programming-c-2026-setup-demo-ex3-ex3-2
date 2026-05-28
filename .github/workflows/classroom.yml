@@ -1,0 +1,80 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Valid sudoku example 1
+      id: valid-sudoku-example-1
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Valid sudoku example 1
+        setup-command: gcc -o runme main.c
+        command: "./runme"
+        input: 1 2 3 4 3 4 1 2 4 3 2 1 2 1 4 3
+        expected-output: |-
+          Please enter your solution:
+          Valid solution!
+        comparison-method: exact
+        timeout: 10
+        max-score: 15
+    - name: Invalid sudoku - block duplication
+      id: invalid-sudoku-block-duplication
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Invalid sudoku - block duplication
+        setup-command: gcc -o runme main.c
+        command: "./runme"
+        input: 1 2 3 4 2 1 4 3 3 4 1 2 4 3 2 1
+        expected-output: |-
+          Please enter your solution:
+          Bad solution!
+        comparison-method: exact
+        timeout: 10
+        max-score: 15
+    - name: Invalid sudoku - row duplication
+      id: invalid-sudoku-row-duplication
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Invalid sudoku - row duplication
+        setup-command: gcc -o runme main.c
+        command: "./runme"
+        input: 4 3 2 1 1 2 3 2 3 1 4 3 2 4 1 4
+        expected-output: |-
+          Please enter your solution:
+          Bad solution!
+        comparison-method: exact
+        timeout: 10
+        max-score: 15
+    - name: Valid sudoku example 2
+      id: valid-sudoku-example-2
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Valid sudoku example 2
+        setup-command: gcc -o runme main.c
+        command: "./runme"
+        input: 2 3 4 1 4 1 2 3 3 2 1 4 1 4 3 2
+        expected-output: |-
+          Please enter your solution:
+          Valid solution!
+        comparison-method: exact
+        timeout: 10
+        max-score: 15
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        VALID-SUDOKU-EXAMPLE-1_RESULTS: "${{steps.valid-sudoku-example-1.outputs.result}}"
+        INVALID-SUDOKU-BLOCK-DUPLICATION_RESULTS: "${{steps.invalid-sudoku-block-duplication.outputs.result}}"
+        INVALID-SUDOKU-ROW-DUPLICATION_RESULTS: "${{steps.invalid-sudoku-row-duplication.outputs.result}}"
+        VALID-SUDOKU-EXAMPLE-2_RESULTS: "${{steps.valid-sudoku-example-2.outputs.result}}"
+      with:
+        runners: valid-sudoku-example-1,invalid-sudoku-block-duplication,invalid-sudoku-row-duplication,valid-sudoku-example-2
